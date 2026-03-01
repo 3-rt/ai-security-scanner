@@ -1,6 +1,6 @@
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://ai-security-scanner-production.up.railway.app";
+function getApiUrl(): string {
+  return "https://ai-security-scanner-production.up.railway.app";
+}
 
 export interface ScanResponse {
   scan_id: string;
@@ -56,7 +56,7 @@ export interface ScanResultsResponse {
 }
 
 export async function startScan(repoUrl: string): Promise<ScanResponse> {
-  const res = await fetch(`${API_URL}/api/scan`, {
+  const res = await fetch(`${getApiUrl()}/api/scan`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ repo_url: repoUrl }),
@@ -71,7 +71,7 @@ export async function startScan(repoUrl: string): Promise<ScanResponse> {
 }
 
 export async function getScanStatus(scanId: string): Promise<ScanStatusResponse> {
-  const res = await fetch(`${API_URL}/api/scan/${scanId}/status`);
+  const res = await fetch(`${getApiUrl()}/api/scan/${scanId}/status`);
 
   if (!res.ok) {
     throw new Error("Failed to get scan status");
@@ -81,7 +81,7 @@ export async function getScanStatus(scanId: string): Promise<ScanStatusResponse>
 }
 
 export async function getScanResults(scanId: string): Promise<ScanResultsResponse> {
-  const res = await fetch(`${API_URL}/api/scan/${scanId}/results`);
+  const res = await fetch(`${getApiUrl()}/api/scan/${scanId}/results`);
 
   if (!res.ok) {
     if (res.status === 202) {
