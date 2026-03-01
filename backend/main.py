@@ -37,5 +37,16 @@ app.include_router(scan_router)
 
 
 @app.get("/health")
-async def health_check() -> dict[str, str]:
-    return {"status": "healthy"}
+async def health_check() -> dict[str, object]:
+    import shutil
+    from utils.config import settings
+
+    codeql_path = shutil.which("codeql") or settings.CODEQL_PATH
+    codeql_exists = os.path.isfile(codeql_path)
+
+    return {
+        "status": "healthy",
+        "codeql_path": codeql_path,
+        "codeql_installed": codeql_exists,
+        "codeql_env": settings.CODEQL_PATH,
+    }
