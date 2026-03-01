@@ -38,7 +38,8 @@ async def create_database(
         f"--language={language}",
         f"--source-root={repo_path}",
         "--overwrite",
-        "--threads=0",  # Use all available threads
+        "--threads=1",
+        "--ram=1024",
     ]
 
     logger.info("Creating CodeQL database: %s", " ".join(cmd))
@@ -83,7 +84,8 @@ async def run_analysis(
         suite,
         "--format=sarifv2.1.0",
         f"--output={sarif_path}",
-        "--threads=0",
+        "--threads=1",
+        "--ram=1024",
         "--download",
     ]
 
