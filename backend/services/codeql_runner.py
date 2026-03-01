@@ -10,13 +10,13 @@ logger = logging.getLogger(__name__)
 
 # CodeQL query suites for each language
 QUERY_SUITES: dict[str, str] = {
-    "python": "codeql/python-queries:codeql-suites/python-security-and-quality.qls",
-    "javascript": "codeql/javascript-queries:codeql-suites/javascript-security-and-quality.qls",
-    "java": "codeql/java-queries:codeql-suites/java-security-and-quality.qls",
-    "csharp": "codeql/csharp-queries:codeql-suites/csharp-security-and-quality.qls",
-    "go": "codeql/go-queries:codeql-suites/go-security-and-quality.qls",
-    "ruby": "codeql/ruby-queries:codeql-suites/ruby-security-and-quality.qls",
-    "cpp": "codeql/cpp-queries:codeql-suites/cpp-security-and-quality.qls",
+    "python": "codeql/python-queries:codeql-suites/python-security-extended.qls",
+    "javascript": "codeql/javascript-queries:codeql-suites/javascript-security-extended.qls",
+    "java": "codeql/java-queries:codeql-suites/java-security-extended.qls",
+    "csharp": "codeql/csharp-queries:codeql-suites/csharp-security-extended.qls",
+    "go": "codeql/go-queries:codeql-suites/go-security-extended.qls",
+    "ruby": "codeql/ruby-queries:codeql-suites/ruby-security-extended.qls",
+    "cpp": "codeql/cpp-queries:codeql-suites/cpp-security-extended.qls",
 }
 
 
@@ -39,7 +39,7 @@ async def create_database(
         f"--source-root={repo_path}",
         "--overwrite",
         "--threads=1",
-        "--ram=1024",
+        "--ram=2048",
     ]
 
     logger.info("Creating CodeQL database: %s", " ".join(cmd))
@@ -85,7 +85,7 @@ async def run_analysis(
         "--format=sarifv2.1.0",
         f"--output={sarif_path}",
         "--threads=1",
-        "--ram=1024",
+        "--ram=2048",
         "--download",
     ]
 
