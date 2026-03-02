@@ -38,9 +38,26 @@ app.include_router(scan_router)
 
 @app.get("/health")
 async def health_check() -> dict[str, object]:
+    import asyncio
+
     semgrep_path = shutil.which("semgrep")
+
+    # Get semgrep version
+    version = "unknown"
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "semgrep", "--version",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await proc.communicate()
+        version = stdout.decode().strip()
+    except Exception:
+        pass
+
     return {
         "status": "healthy",
         "semgrep_installed": semgrep_path is not None,
         "semgrep_path": semgrep_path or "not found",
+        "semgrep_version": version,
     }

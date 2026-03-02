@@ -74,9 +74,14 @@ async def run_scan(repo_path: Path, language: str, scan_id: str) -> Path:
         proc.communicate(), timeout=settings.SCAN_TIMEOUT_SECONDS
     )
 
+    stdout_text = stdout.decode().strip()
     stderr_text = stderr.decode().strip()
+
+    logger.info("Semgrep rc=%d", proc.returncode)
+    if stdout_text:
+        logger.info("Semgrep stdout: %s", stdout_text[:1000])
     if stderr_text:
-        logger.info("Semgrep stderr: %s", stderr_text[:500])
+        logger.info("Semgrep stderr: %s", stderr_text[:1000])
 
     # Semgrep returns 0 for clean, 1 for findings, other codes for errors
     if proc.returncode not in (0, 1):
@@ -84,6 +89,7 @@ async def run_scan(repo_path: Path, language: str, scan_id: str) -> Path:
         raise RuntimeError(f"Semgrep analysis failed: {stderr_text[:200]}")
 
     if not sarif_path.exists():
+        logger.warning("Semgrep produced no SARIF output file")
         # Create empty SARIF if no output (clean scan)
         empty_sarif = {
             "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
@@ -93,12 +99,19 @@ async def run_scan(repo_path: Path, language: str, scan_id: str) -> Path:
         with open(sarif_path, "w") as f:
             json.dump(empty_sarif, f)
 
-    # Count results
+    # Count results and log SARIF details
     try:
         with open(sarif_path) as f:
             data = json.load(f)
         result_count = sum(len(run.get("results", [])) for run in data.get("runs", []))
-        logger.info("Semgrep analysis complete. %d findings. Output: %s", result_count, sarif_path)
+        rule_count = sum(
+            len(run.get("tool", {}).get("driver", {}).get("rules", []))
+            for run in data.get("runs", [])
+        )
+        logger.info(
+            "Semgrep analysis complete. %d findings, %d rules loaded. Output: %s",
+            result_count, rule_count, sarif_path,
+        )
     except Exception:
         logger.info("Semgrep analysis complete. Output: %s", sarif_path)
 
