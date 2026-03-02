@@ -4,6 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { startScan } from "@/lib/api";
 
+const EXAMPLE_REPOS = [
+  "https://github.com/stamparm/DSVW",
+  "https://github.com/incredibleindishell/SSRF_Vulnerable_Lab",
+  "https://github.com/kiwicom/xssable",
+  "https://github.com/incredibleindishell/CORS-vulnerable-Lab",
+  "https://github.com/jbarone/xxelab",
+];
+
 export default function ScanForm() {
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
@@ -77,6 +85,27 @@ export default function ScanForm() {
           )}
         </button>
       </div>
+
+      <div className="mt-4">
+        <p className="text-sm text-gray-500 mb-2">Try an example repo:</p>
+        <div className="flex flex-wrap gap-2">
+          {EXAMPLE_REPOS.map((exampleUrl) => (
+            <button
+              key={exampleUrl}
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                setUrl(exampleUrl);
+                setError("");
+              }}
+              className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {exampleUrl.replace("https://github.com/", "")}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {error && (
         <p className="mt-3 text-sm text-red-600 flex items-center gap-1.5">
           <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
