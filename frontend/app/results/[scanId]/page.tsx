@@ -132,13 +132,13 @@ export default function ResultsPage() {
   if (phase === "error") {
     return (
       <div className="max-w-2xl mx-auto mt-12 px-4">
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-center">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
           <svg className="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <h2 className="text-xl font-semibold text-red-400 mb-2">Scan Failed</h2>
-          <p className="text-gray-400">{error}</p>
-          <a href="/" className="inline-block mt-4 px-4 py-2 bg-gray-800 rounded-lg text-sm hover:bg-gray-700 transition-colors">
+          <h2 className="text-xl font-semibold text-red-700 mb-2">Scan Failed</h2>
+          <p className="text-gray-500">{error}</p>
+          <a href="/" className="inline-block mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 transition-colors">
             Try Again
           </a>
         </div>
@@ -154,14 +154,14 @@ export default function ResultsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold">{results.repo_name}</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-gray-500 mt-1">
             Scanned {new Date(results.scanned_at).toLocaleString()} &middot;{" "}
             {results.language}
           </p>
         </div>
         <button
           onClick={generateMarkdownReport}
-          className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm hover:bg-gray-700 transition-colors flex items-center gap-2 self-start"
+          className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2 self-start"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -182,8 +182,8 @@ export default function ResultsPage() {
               onClick={() => setSeverityFilter(sev)}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                 severityFilter === sev
-                  ? "bg-gray-700 text-white"
-                  : "bg-gray-800/50 text-gray-400 hover:text-gray-200"
+                  ? "bg-gray-900 text-white"
+                  : "bg-gray-100 text-gray-500 hover:text-gray-700"
               }`}
             >
               {sev === "all" ? "All" : <SeverityBadge severity={sev} />}
@@ -195,7 +195,7 @@ export default function ResultsPage() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search vulnerabilities..."
-          className="flex-1 px-3 py-1.5 bg-gray-800/50 border border-gray-700 rounded-lg text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+          className="flex-1 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
         />
       </div>
 

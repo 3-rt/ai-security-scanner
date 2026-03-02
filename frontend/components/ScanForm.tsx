@@ -49,17 +49,17 @@ export default function ScanForm() {
             }}
             placeholder="https://github.com/username/repo"
             disabled={loading}
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all disabled:opacity-50"
+            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400 transition-all disabled:opacity-50"
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 font-medium rounded-xl hover:from-emerald-400 hover:to-cyan-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shrink-0"
+          className="px-6 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shrink-0"
         >
           {loading ? (
             <>
-              <div className="w-4 h-4 rounded-full border-2 border-gray-900 border-t-transparent animate-spin" />
+              <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
               Starting...
             </>
           ) : (
@@ -78,7 +78,7 @@ export default function ScanForm() {
         </button>
       </div>
       {error && (
-        <p className="mt-3 text-sm text-red-400 flex items-center gap-1.5">
+        <p className="mt-3 text-sm text-red-600 flex items-center gap-1.5">
           <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               strokeLinecap="round"

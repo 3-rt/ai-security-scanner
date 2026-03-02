@@ -60,16 +60,16 @@ export default function ProgressTracker({ scanId, onComplete, onError }: Progres
 
   return (
     <div className="max-w-2xl mx-auto mt-12 px-4">
-      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Scanning Repository</h2>
-          <span className="text-sm text-gray-400">{progress}%</span>
+          <h2 className="text-lg font-semibold text-gray-900">Scanning Repository</h2>
+          <span className="text-sm text-gray-500">{progress}%</span>
         </div>
 
         {/* Progress bar */}
-        <div className="w-full bg-gray-700 rounded-full h-2 mb-6 overflow-hidden">
+        <div className="w-full bg-gray-200 rounded-full h-2 mb-6 overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full transition-all duration-500 ease-out"
+            className="h-full bg-gray-900 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -85,22 +85,22 @@ export default function ProgressTracker({ scanId, onComplete, onError }: Progres
               <div key={step} className="flex items-center gap-3">
                 <div className="w-6 h-6 flex items-center justify-center shrink-0">
                   {isCompleted ? (
-                    <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-5 h-5 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   ) : isCurrent ? (
-                    <div className="w-4 h-4 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+                    <div className="w-4 h-4 rounded-full border-2 border-gray-900 border-t-transparent animate-spin" />
                   ) : (
-                    <div className="w-4 h-4 rounded-full border-2 border-gray-600" />
+                    <div className="w-4 h-4 rounded-full border-2 border-gray-300" />
                   )}
                 </div>
                 <span
                   className={`text-sm ${
                     isCompleted
-                      ? "text-gray-300"
+                      ? "text-gray-900"
                       : isCurrent
-                      ? "text-cyan-400 font-medium"
-                      : "text-gray-500"
+                      ? "text-gray-900 font-medium"
+                      : "text-gray-400"
                   }`}
                 >
                   {STEP_LABELS[step]}
@@ -116,8 +116,8 @@ export default function ProgressTracker({ scanId, onComplete, onError }: Progres
         </div>
 
         {status?.status === "failed" && status.error && (
-          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-            <p className="text-sm text-red-400">{status.error}</p>
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600">{status.error}</p>
           </div>
         )}
       </div>
