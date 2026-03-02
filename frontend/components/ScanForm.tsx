@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { startScan } from "@/lib/api";
 
 const EXAMPLE_REPOS = [
-  "https://github.com/stamparm/DSVW",
+  "https://github.com/appsecco/dvna",
   "https://github.com/incredibleindishell/SSRF_Vulnerable_Lab",
   "https://github.com/kiwicom/xssable",
-  "https://github.com/incredibleindishell/CORS-vulnerable-Lab",
-  "https://github.com/jbarone/xxelab",
+  "https://github.com/snoopysecurity/dvws-node",
+  "https://github.com/theowni/Damn-Vulnerable-RESTaurant-API-Game",
 ];
 
 export default function ScanForm() {
