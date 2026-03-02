@@ -4,7 +4,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                  Next.js Frontend (Vercel)               │
+│                  Next.js Frontend (Vercel)              │
 │                                                         │
 │  ┌──────────┐  ┌─────────────────┐  ┌────────────────┐  │
 │  │ ScanForm │→ │ ProgressTracker │→ │ Results Page   │  │
@@ -14,7 +14,7 @@
 └──────────────────────┬──────────────────────────────────┘
                        │ HTTPS (REST API)
 ┌──────────────────────▼───────────────────────────────────┐
-│                FastAPI Backend (Railway)                  │
+│                FastAPI Backend (Railway)                 │
 │                                                          │
 │  POST /api/scan ──→ Background Task Pipeline:            │
 │                                                          │

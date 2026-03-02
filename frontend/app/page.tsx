@@ -4,9 +4,6 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center px-4 py-24">
       <div className="text-center mb-12 max-w-3xl">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 border border-gray-200 text-gray-600 text-sm mb-6">
-          Powered by Semgrep + Claude AI
-        </div>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900 text-balance">
           AI-Enhanced Security
           <br />
