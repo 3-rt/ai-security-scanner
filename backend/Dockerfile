@@ -20,6 +20,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
+# Force cache bust: v2
 ENV TEMP_DIR=/tmp/codeql_scans
 
 EXPOSE 8000
