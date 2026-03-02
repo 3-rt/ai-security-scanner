@@ -9,7 +9,8 @@ from utils.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Individual high-value security queries per language (low memory footprint)
+# Individual high-value security queries per language.
+# Format: "pack:path" where path is relative to the pack's ql/src directory.
 SECURITY_QUERIES: dict[str, list[str]] = {
     "python": [
         "codeql/python-queries:Security/CWE-089/SqlInjection.ql",
@@ -92,6 +93,8 @@ async def run_analysis(
     all_results: list[dict] = []
     all_rules: list[dict] = []
     base_sarif: dict | None = None
+    succeeded = 0
+    failed = 0
 
     for i, query in enumerate(queries):
         query_sarif = settings.TEMP_DIR / scan_id / f"result_{i}.sarif"
@@ -119,21 +122,33 @@ async def run_analysis(
             proc.communicate(), timeout=settings.SCAN_TIMEOUT_SECONDS
         )
 
+        stderr_text = stderr.decode().strip()
+
         if proc.returncode != 0:
-            error_msg = stderr.decode().strip()
-            # Skip queries that fail (e.g., not found) but log the error
-            logger.warning("Query %s failed (skipping): %s", query, error_msg)
+            failed += 1
+            logger.warning("Query %s failed (rc=%d): %s", query, proc.returncode, stderr_text)
             continue
 
         if not query_sarif.exists():
+            failed += 1
+            logger.warning("Query %s produced no output file", query)
             continue
 
         try:
             with open(query_sarif) as f:
                 sarif_data = json.load(f)
         except json.JSONDecodeError:
+            failed += 1
             logger.warning("Failed to parse SARIF for query %s", query)
             continue
+
+        succeeded += 1
+
+        # Count results from this query
+        query_result_count = sum(
+            len(run.get("results", [])) for run in sarif_data.get("runs", [])
+        )
+        logger.info("Query %s: %d results found", query, query_result_count)
 
         # Use first valid SARIF as the base structure
         if base_sarif is None:
@@ -144,9 +159,15 @@ async def run_analysis(
             driver = run.get("tool", {}).get("driver", {})
             all_rules.extend(driver.get("rules", []))
 
+    logger.info(
+        "Query execution summary: %d succeeded, %d failed, %d total results",
+        succeeded, failed, len(all_results),
+    )
+
     # Merge all results into a single SARIF file
     if base_sarif is None:
         # No queries succeeded — create a minimal empty SARIF
+        logger.error("All %d queries failed! No results to return.", len(queries))
         base_sarif = {
             "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
             "version": "2.1.0",
@@ -170,8 +191,8 @@ async def run_analysis(
         json.dump(base_sarif, f, indent=2)
 
     logger.info(
-        "CodeQL analysis complete. %d results from %d queries. Output: %s",
-        len(all_results), len(queries), merged_sarif_path,
+        "CodeQL analysis complete. %d results from %d/%d queries. Output: %s",
+        len(all_results), succeeded, len(queries), merged_sarif_path,
     )
     return merged_sarif_path
 
