@@ -59,7 +59,6 @@ async def run_scan(repo_path: Path, language: str, scan_id: str) -> Path:
         *config_args,
         "--sarif",
         "--output", str(sarif_path),
-        "--no-git",
         "--metrics=off",
         str(repo_path),
     ]
