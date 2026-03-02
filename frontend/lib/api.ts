@@ -22,7 +22,7 @@ export interface Vulnerability {
   id: string;
   title: string;
   severity: "critical" | "high" | "medium" | "low";
-  codeql_severity: string;
+  scanner_severity: string;
   file: string;
   line: number;
   end_line: number | null;

@@ -20,7 +20,7 @@ from models.schemas import (
     STEP_WEIGHTS,
     Vulnerability,
 )
-from services import repo_manager, codeql_runner, sarif_parser, ai_enhancer
+from services import repo_manager, semgrep_runner, sarif_parser, ai_enhancer
 
 logger = logging.getLogger(__name__)
 
@@ -162,22 +162,17 @@ async def _run_scan(scan_id: str, repo_url: str) -> None:
         scans[scan_id]["language"] = language
         _complete_step(scan_id, ScanStep.DETECT_LANGUAGE)
 
-        # Step 3: Create CodeQL database
-        _mark_step(scan_id, ScanStep.CREATE_DATABASE)
-        db_path = await codeql_runner.create_database(repo_path, language, scan_id)
-        _complete_step(scan_id, ScanStep.CREATE_DATABASE)
-
-        # Step 4: Run analysis
+        # Step 3: Run Semgrep analysis
         _mark_step(scan_id, ScanStep.ANALYZE)
-        sarif_path = await codeql_runner.run_analysis(db_path, language, scan_id)
+        sarif_path = await semgrep_runner.run_scan(repo_path, language, scan_id)
         _complete_step(scan_id, ScanStep.ANALYZE)
 
-        # Step 5: Parse SARIF results
+        # Step 4: Parse SARIF results
         _mark_step(scan_id, ScanStep.PARSE_RESULTS)
         vulnerabilities = sarif_parser.parse_sarif(sarif_path, repo_path)
         _complete_step(scan_id, ScanStep.PARSE_RESULTS)
 
-        # Step 6: AI enhancement
+        # Step 5: AI enhancement
         _mark_step(scan_id, ScanStep.AI_ENHANCE)
         enhanced = await ai_enhancer.enhance_vulnerabilities(vulnerabilities)
         _complete_step(scan_id, ScanStep.AI_ENHANCE)

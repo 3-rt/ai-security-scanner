@@ -19,8 +19,8 @@
 │  POST /api/scan ──→ Background Task Pipeline:            │
 │                                                          │
 │  ┌──────────────┐  ┌──────────────┐  ┌───────────────┐   │
-│  │ RepoManager  │→ │ CodeQL       │→ │ SARIF Parser  │   │
-│  │ (git clone)  │  │ Runner       │  │ (merge)       │   │
+│  │ RepoManager  │→ │ Semgrep      │→ │ SARIF Parser  │   │
+│  │ (git clone)  │  │ Runner       │  │               │   │
 │  └──────────────┘  └──────────────┘  └───────┬───────┘   │
 │                                              │           │
 │                                     ┌────────▼────────┐  │
@@ -36,9 +36,8 @@
 2. **Background pipeline starts:**
    - `RepoManager` shallow-clones the repo (`depth=1`)
    - `RepoManager` detects primary language via file extension counting
-   - `CodeQLRunner` creates a CodeQL database (`--ram=512 --threads=1`)
-   - `CodeQLRunner` runs 5 targeted security queries **individually** to stay within 1GB RAM, then merges SARIF outputs
-   - `SARIFParser` parses the merged SARIF v2.1.0 output into structured data
+   - `SemgrepRunner` runs Semgrep with language-specific rulesets (e.g., `p/python`, `p/flask`, `p/owasp-top-ten`) and outputs SARIF
+   - `SARIFParser` parses the SARIF v2.1.0 output into structured vulnerability data
    - `AIEnhancer` sends all findings to Claude **in parallel** (`asyncio.gather`) for explanation, attack scenarios, and fix generation
 3. **Frontend polls** `GET /api/scan/{id}/status` every 2 seconds
 4. **On completion** → `GET /api/scan/{id}/results` returns enhanced findings
@@ -49,10 +48,10 @@
 
 | Module | Responsibility |
 |---|---|
-| `main.py` | FastAPI app, CORS (allow all origins), rate limiting, health check with CodeQL diagnostics |
+| `main.py` | FastAPI app, CORS (allow all origins), rate limiting, health check |
 | `routers/scan.py` | API endpoints, scan orchestration, in-memory state |
 | `services/repo_manager.py` | Git operations, language detection, repo size validation, cleanup |
-| `services/codeql_runner.py` | Per-query CodeQL execution, SARIF merging, memory-constrained analysis |
+| `services/semgrep_runner.py` | Semgrep execution with language-specific rulesets, SARIF output |
 | `services/sarif_parser.py` | SARIF JSON parsing, severity mapping, code snippet extraction |
 | `services/ai_enhancer.py` | Parallel Claude API calls, structured prompt engineering, fallback mode |
 | `models/schemas.py` | Pydantic models for request/response validation |
@@ -71,7 +70,7 @@
 
 ## Design Decisions
 
-**Individual query execution**: Instead of running a full CodeQL query suite (which loads all queries into memory at once), queries are executed one at a time with `--ram=512`. This allows CodeQL to run within Railway's 1GB memory limit. Results are merged into a single SARIF file afterward.
+**Semgrep over CodeQL**: Semgrep runs within ~100MB of RAM, making it compatible with Railway's 1GB memory limit. CodeQL requires a minimum of 2GB RAM per query. Semgrep also supports a wide range of languages with community-maintained rulesets.
 
 **Parallel AI enhancement**: All vulnerability findings are sent to Claude simultaneously via `asyncio.gather`, reducing the AI enhancement step from O(n) sequential API calls to a single parallel batch.
 
@@ -83,16 +82,16 @@
 
 **Fallback AI**: If no Anthropic API key is configured, the scanner still functions with rule-based explanations. This ensures the tool works without paid API access.
 
-**Severity upgrade**: CodeQL's severity levels (error/warning/note) are mapped to our scale (critical/high/medium/low). Known dangerous rules (SQL injection, command injection) are automatically upgraded to "critical".
+**Severity upgrade**: Semgrep's severity levels (error/warning/note) are mapped to our scale (critical/high/medium/low). Known dangerous patterns (SQL injection, command injection, etc.) are automatically upgraded to "critical".
 
 ## Deployment Architecture
 
 | Service | Platform | Configuration |
 |---|---|---|
 | Frontend | Vercel | Root directory: `frontend`, auto-detected as Next.js |
-| Backend | Railway | Root directory: `backend`, Dockerfile build with CodeQL CLI |
+| Backend | Railway | Root directory: `backend`, Dockerfile build with Semgrep |
 
-The backend Dockerfile installs CodeQL CLI v2.24.2, git, and Python dependencies. The frontend's `next.config.mjs` provides a fallback API URL pointing to the Railway backend.
+The backend Dockerfile installs git and Python dependencies (including Semgrep via pip). The frontend's `next.config.mjs` provides a fallback API URL pointing to the Railway backend.
 
 ## Security Considerations
 
@@ -105,13 +104,13 @@ The backend Dockerfile installs CodeQL CLI v2.24.2, git, and Python dependencies
 - Temp files cleaned up after each scan
 - Shallow clones minimize disk usage
 
-## Supported Security Queries
+## Supported Rulesets
 
-| Category | Python | JavaScript | Java |
-|---|---|---|---|
-| SQL Injection | CWE-089 | CWE-089 | CWE-089 |
-| Command Injection | CWE-078 | CWE-078 | CWE-078 |
-| Cross-Site Scripting | CWE-079 | CWE-079 | CWE-079 |
-| Path Traversal | CWE-022 | CWE-022 | CWE-022 |
-| Unsafe Deserialization | CWE-502 | — | CWE-502 |
-| Code Injection | — | CWE-094 | — |
+| Language | Rulesets |
+|---|---|
+| Python | `p/python`, `p/flask`, `p/django`, `p/owasp-top-ten` |
+| JavaScript | `p/javascript`, `p/nodejs`, `p/owasp-top-ten` |
+| Java | `p/java`, `p/owasp-top-ten` |
+| Go | `p/golang`, `p/owasp-top-ten` |
+| Ruby | `p/ruby`, `p/owasp-top-ten` |
+| Other | `p/owasp-top-ten`, `p/security-audit` |

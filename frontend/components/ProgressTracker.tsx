@@ -6,13 +6,12 @@ import { getScanStatus, type ScanStatusResponse } from "@/lib/api";
 const STEP_LABELS: Record<string, string> = {
   clone_repo: "Clone repository",
   detect_language: "Detect language",
-  create_database: "Create CodeQL database",
-  analyze: "Run security queries",
+  analyze: "Run Semgrep security scan",
   parse_results: "Parse results",
   ai_enhance: "AI enhancement",
 };
 
-const ALL_STEPS = ["clone_repo", "detect_language", "create_database", "analyze", "parse_results", "ai_enhance"];
+const ALL_STEPS = ["clone_repo", "detect_language", "analyze", "parse_results", "ai_enhance"];
 
 interface ProgressTrackerProps {
   scanId: string;

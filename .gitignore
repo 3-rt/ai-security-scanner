@@ -25,8 +25,8 @@ out/
 .vscode/
 .idea/
 
-# CodeQL temp files
-/tmp/codeql_scans/
+# Scan temp files
+/tmp/security_scans/
 
 # Claude local settings
 .claude/settings.local.json

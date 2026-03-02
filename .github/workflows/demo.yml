@@ -21,7 +21,7 @@ jobs:
       - run: python -m py_compile main.py
       - run: python -m py_compile routers/scan.py
       - run: python -m py_compile services/repo_manager.py
-      - run: python -m py_compile services/codeql_runner.py
+      - run: python -m py_compile services/semgrep_runner.py
       - run: python -m py_compile services/sarif_parser.py
       - run: python -m py_compile services/ai_enhancer.py
 

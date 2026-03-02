@@ -41,7 +41,6 @@ class ScanResponse(BaseModel):
 class ScanStep(str, Enum):
     CLONE_REPO = "clone_repo"
     DETECT_LANGUAGE = "detect_language"
-    CREATE_DATABASE = "create_database"
     ANALYZE = "analyze"
     PARSE_RESULTS = "parse_results"
     AI_ENHANCE = "ai_enhance"
@@ -50,8 +49,7 @@ class ScanStep(str, Enum):
 STEP_LABELS: dict[ScanStep, str] = {
     ScanStep.CLONE_REPO: "Cloning repository",
     ScanStep.DETECT_LANGUAGE: "Detecting language",
-    ScanStep.CREATE_DATABASE: "Creating CodeQL database",
-    ScanStep.ANALYZE: "Running security queries",
+    ScanStep.ANALYZE: "Running Semgrep security scan",
     ScanStep.PARSE_RESULTS: "Parsing results",
     ScanStep.AI_ENHANCE: "Enhancing with AI analysis",
 }
@@ -59,10 +57,9 @@ STEP_LABELS: dict[ScanStep, str] = {
 STEP_WEIGHTS: dict[ScanStep, int] = {
     ScanStep.CLONE_REPO: 10,
     ScanStep.DETECT_LANGUAGE: 5,
-    ScanStep.CREATE_DATABASE: 30,
-    ScanStep.ANALYZE: 25,
-    ScanStep.PARSE_RESULTS: 5,
-    ScanStep.AI_ENHANCE: 25,
+    ScanStep.ANALYZE: 35,
+    ScanStep.PARSE_RESULTS: 10,
+    ScanStep.AI_ENHANCE: 40,
 }
 
 
@@ -80,7 +77,7 @@ class Vulnerability(BaseModel):
     id: str
     title: str
     severity: str
-    codeql_severity: str
+    scanner_severity: str
     file: str
     line: int
     end_line: Optional[int] = None

@@ -6,7 +6,7 @@ export default function Home() {
       <div className="text-center mb-12 max-w-3xl">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm mb-6">
           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          Powered by CodeQL + Claude AI
+          Powered by Semgrep + Claude AI
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-balance">
           AI-Enhanced Security
@@ -16,7 +16,7 @@ export default function Home() {
           </span>
         </h1>
         <p className="mt-6 text-lg text-gray-400 max-w-2xl mx-auto text-balance">
-          Paste a GitHub repository URL to run CodeQL static analysis. Get AI-generated
+          Paste a GitHub repository URL to run Semgrep static analysis. Get AI-generated
           explanations, attack scenarios, and fix suggestions for every vulnerability found.
         </p>
       </div>
@@ -27,7 +27,7 @@ export default function Home() {
         {[
           {
             title: "Static Analysis",
-            desc: "CodeQL scans source code for security vulnerabilities using semantic analysis and dataflow tracking.",
+            desc: "Semgrep scans source code for security vulnerabilities using pattern matching and dataflow analysis.",
           },
           {
             title: "AI Enhancement",

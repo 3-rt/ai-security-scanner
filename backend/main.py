@@ -1,5 +1,5 @@
 import logging
-import os
+import shutil
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +17,7 @@ logging.basicConfig(
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
-    title="CodeQL AI Security Scanner",
+    title="AI Security Scanner",
     description="Automated security analysis with AI-enhanced vulnerability reports",
     version="1.0.0",
 )
@@ -38,15 +38,9 @@ app.include_router(scan_router)
 
 @app.get("/health")
 async def health_check() -> dict[str, object]:
-    import shutil
-    from utils.config import settings
-
-    codeql_path = shutil.which("codeql") or settings.CODEQL_PATH
-    codeql_exists = os.path.isfile(codeql_path)
-
+    semgrep_path = shutil.which("semgrep")
     return {
         "status": "healthy",
-        "codeql_path": codeql_path,
-        "codeql_installed": codeql_exists,
-        "codeql_env": settings.CODEQL_PATH,
+        "semgrep_installed": semgrep_path is not None,
+        "semgrep_path": semgrep_path or "not found",
     }

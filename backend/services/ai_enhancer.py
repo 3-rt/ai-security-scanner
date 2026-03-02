@@ -13,12 +13,12 @@ from utils.config import settings
 logger = logging.getLogger(__name__)
 
 ENHANCEMENT_PROMPT = """\
-You are a senior application security engineer. Analyze the following vulnerability found by CodeQL static analysis and provide a detailed, actionable assessment.
+You are a senior application security engineer. Analyze the following vulnerability found by static analysis and provide a detailed, actionable assessment.
 
 ## Vulnerability Details
 - **Rule ID:** {rule_id}
 - **Title:** {title}
-- **Severity (CodeQL):** {codeql_severity}
+- **Scanner Severity:** {scanner_severity}
 - **File:** {file}
 - **Line:** {line}
 
@@ -34,7 +34,7 @@ Respond with a JSON object containing exactly these fields:
   "fixed_code": "The corrected version of the vulnerable code snippet. Show only the fixed code, not the entire file.",
   "business_impact": "One sentence describing the potential business impact if this vulnerability is exploited.",
   "fix_time_estimate": "Estimated time to fix (e.g., '5 minutes', '30 minutes', '2 hours').",
-  "severity": "Your assessed severity: 'critical', 'high', 'medium', or 'low'. May differ from CodeQL's assessment.",
+  "severity": "Your assessed severity: 'critical', 'high', 'medium', or 'low'. May differ from the scanner's assessment.",
   "confidence": 0.95,
   "false_positive_likelihood": 0.05
 }}
@@ -75,7 +75,7 @@ async def _enhance_single(
     prompt = ENHANCEMENT_PROMPT.format(
         rule_id=vuln.rule_id,
         title=vuln.title,
-        codeql_severity=vuln.codeql_severity,
+        scanner_severity=vuln.scanner_severity,
         file=vuln.file,
         line=vuln.line,
         vulnerable_code=vuln.vulnerable_code or "(code snippet not available)",
@@ -94,7 +94,7 @@ async def _enhance_single(
         id=vuln.id,
         title=vuln.title,
         severity=data.get("severity", vuln.severity),
-        codeql_severity=vuln.codeql_severity,
+        scanner_severity=vuln.scanner_severity,
         file=vuln.file,
         line=vuln.line,
         end_line=vuln.end_line,
@@ -167,7 +167,7 @@ def _apply_single_fallback(vuln: Vulnerability) -> Vulnerability:
         ),
     }
 
-    explanation = "Security vulnerability detected by CodeQL static analysis."
+    explanation = "Security vulnerability detected by static analysis."
     for pattern, desc in explanations.items():
         if pattern in vuln.rule_id.lower():
             explanation = desc
@@ -177,7 +177,7 @@ def _apply_single_fallback(vuln: Vulnerability) -> Vulnerability:
         id=vuln.id,
         title=vuln.title,
         severity=vuln.severity,
-        codeql_severity=vuln.codeql_severity,
+        scanner_severity=vuln.scanner_severity,
         file=vuln.file,
         line=vuln.line,
         end_line=vuln.end_line,

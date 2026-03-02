@@ -13,7 +13,7 @@ from utils.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Mapping of file extensions to CodeQL-supported languages
+# Mapping of file extensions to supported languages
 EXTENSION_TO_LANGUAGE: dict[str, str] = {
     ".py": "python",
     ".js": "javascript",
@@ -30,7 +30,7 @@ EXTENSION_TO_LANGUAGE: dict[str, str] = {
     ".hpp": "cpp",
 }
 
-# Languages that CodeQL supports for security analysis
+# Languages supported for security analysis
 SUPPORTED_LANGUAGES = {"python", "javascript", "java", "csharp", "go", "ruby", "cpp"}
 
 # Allowed GitHub URL pattern
@@ -89,7 +89,7 @@ async def clone_repository(repo_url: str, scan_id: str) -> Path:
 def detect_language(repo_path: Path) -> str:
     """Detect the primary language of a repository by counting file extensions.
 
-    Returns a CodeQL-supported language string.
+    Returns a supported language string.
     Raises ValueError if no supported language is detected.
     """
     counter: Counter[str] = Counter()

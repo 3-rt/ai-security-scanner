@@ -12,9 +12,8 @@ GET /health
 ```json
 {
   "status": "healthy",
-  "codeql_path": "/opt/codeql/codeql",
-  "codeql_installed": true,
-  "codeql_env": "/opt/codeql/codeql"
+  "semgrep_installed": true,
+  "semgrep_path": "/usr/local/bin/semgrep"
 }
 ```
 
@@ -58,9 +57,9 @@ GET /api/scan/{scan_id}/status
 {
   "scan_id": "abc123def456",
   "status": "running",
-  "progress": 67,
-  "current_step": "Running security queries",
-  "steps_completed": ["clone_repo", "detect_language", "create_database"],
+  "progress": 50,
+  "current_step": "Running Semgrep security scan",
+  "steps_completed": ["clone_repo", "detect_language"],
   "steps_remaining": ["analyze", "parse_results", "ai_enhance"],
   "error": null
 }
@@ -71,10 +70,9 @@ GET /api/scan/{scan_id}/status
 **Steps (in order):**
 1. `clone_repo` — Shallow clone the GitHub repository
 2. `detect_language` — Detect primary programming language by file extensions
-3. `create_database` — Create CodeQL analysis database
-4. `analyze` — Run individual security queries (SQL injection, XSS, command injection, path traversal, deserialization)
-5. `parse_results` — Parse and merge SARIF outputs
-6. `ai_enhance` — Generate AI explanations via Claude (parallel)
+3. `analyze` — Run Semgrep with language-specific rulesets (OWASP Top 10, language-specific security rules)
+4. `parse_results` — Parse SARIF output into structured findings
+5. `ai_enhance` — Generate AI explanations via Claude (parallel)
 
 **Errors:**
 - `404` — Scan not found
@@ -107,11 +105,11 @@ GET /api/scan/{scan_id}/results
       "id": "vuln_001",
       "title": "SQL Injection",
       "severity": "critical",
-      "codeql_severity": "high",
+      "scanner_severity": "high",
       "file": "app.py",
       "line": 23,
       "end_line": 23,
-      "rule_id": "py/sql-injection",
+      "rule_id": "python.flask.security.injection.sql-injection",
       "vulnerable_code": "query = f\"SELECT * FROM users WHERE username='{username}'\"",
       "fixed_code": "query = \"SELECT * FROM users WHERE username=?\"\ncursor.execute(query, (username,))",
       "ai_explanation": "This login endpoint directly interpolates user input into a SQL query...",
@@ -132,8 +130,10 @@ GET /api/scan/{scan_id}/results
 
 ## Supported Languages
 
-| Language | CodeQL Queries |
+| Language | Semgrep Rulesets |
 |---|---|
-| Python | SQL injection, command injection, XSS, path traversal, unsafe deserialization |
-| JavaScript | SQL injection, command injection, XSS, path traversal, code injection |
-| Java | SQL injection, command injection, XSS, path traversal, unsafe deserialization |
+| Python | `p/python`, `p/flask`, `p/django`, `p/owasp-top-ten` |
+| JavaScript | `p/javascript`, `p/nodejs`, `p/owasp-top-ten` |
+| Java | `p/java`, `p/owasp-top-ten` |
+| Go | `p/golang`, `p/owasp-top-ten` |
+| Ruby | `p/ruby`, `p/owasp-top-ten` |

@@ -9,7 +9,7 @@ from models.schemas import Vulnerability
 
 logger = logging.getLogger(__name__)
 
-# Map CodeQL severity levels to our severity scale
+# Map SARIF severity levels to our severity scale
 SEVERITY_MAP: dict[str, str] = {
     "error": "high",
     "warning": "medium",
@@ -17,26 +17,23 @@ SEVERITY_MAP: dict[str, str] = {
     "none": "low",
 }
 
-# Rules that are typically critical severity
-CRITICAL_RULES: set[str] = {
-    "py/sql-injection",
-    "js/sql-injection",
-    "py/code-injection",
-    "js/code-injection",
-    "py/command-line-injection",
-    "js/command-line-injection",
-    "py/unsafe-deserialization",
-    "js/prototype-polluting-assignment",
-    "py/path-injection",
-    "js/path-injection",
-    "java/sql-injection",
-    "java/command-line-injection",
-}
+# Rule ID patterns that indicate critical severity
+CRITICAL_PATTERNS: list[str] = [
+    "sql-injection",
+    "sqli",
+    "command-injection",
+    "code-injection",
+    "unsafe-deserialization",
+    "insecure-deserialization",
+    "path-traversal",
+    "arbitrary-file",
+]
 
 
 def parse_sarif(sarif_path: Path, repo_path: Path) -> list[Vulnerability]:
     """Parse a SARIF file and extract vulnerability information.
 
+    Works with both CodeQL and Semgrep SARIF output.
     Returns a list of Vulnerability objects.
     """
     try:
@@ -76,6 +73,12 @@ def _build_rule_index(run: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return rules
 
 
+def _is_critical(rule_id: str, message: str) -> bool:
+    """Check if a finding should be elevated to critical severity."""
+    text = (rule_id + " " + message).lower()
+    return any(pattern in text for pattern in CRITICAL_PATTERNS)
+
+
 def _parse_result(
     result: dict[str, Any],
     rules: dict[str, dict[str, Any]],
@@ -86,20 +89,23 @@ def _parse_result(
     rule_id = result.get("ruleId", "unknown")
     rule = rules.get(rule_id, {})
 
-    # Extract severity
-    codeql_level = result.get("level", "warning")
-    codeql_severity = SEVERITY_MAP.get(codeql_level, "medium")
-
-    # Upgrade to critical for known dangerous rules
-    severity = "critical" if rule_id in CRITICAL_RULES else codeql_severity
+    # Extract severity from SARIF level
+    sarif_level = result.get("level", "warning")
+    scanner_severity = SEVERITY_MAP.get(sarif_level, "medium")
 
     # Extract message
     message = result.get("message", {}).get("text", "Security issue detected")
 
-    # Extract title from rule metadata
+    # Upgrade to critical for known dangerous patterns
+    severity = "critical" if _is_critical(rule_id, message) else scanner_severity
+
+    # Extract title from rule metadata (try multiple SARIF fields)
     title = rule.get("shortDescription", {}).get("text", "")
     if not title:
-        title = rule.get("name", message[:80])
+        title = rule.get("name", "")
+    if not title:
+        # Semgrep often puts the description in the message
+        title = message[:100] if len(message) > 100 else message
 
     # Extract location info
     locations = result.get("locations", [])
@@ -131,7 +137,7 @@ def _parse_result(
         id=f"vuln_{index:03d}",
         title=title,
         severity=severity,
-        codeql_severity=codeql_severity,
+        scanner_severity=scanner_severity,
         file=file_path,
         line=line,
         end_line=end_line,

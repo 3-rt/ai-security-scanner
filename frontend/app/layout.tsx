@@ -14,7 +14,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "CodeQL AI Security Scanner",
+  title: "AI Security Scanner",
   description: "AI-enhanced static security analysis for GitHub repositories",
 };
 
@@ -32,9 +32,9 @@ export default function RootLayout({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <a href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-gray-900 font-bold text-sm">
-                CQ
+                AI
               </div>
-              <span className="font-semibold text-lg">CodeQL AI Scanner</span>
+              <span className="font-semibold text-lg">AI Security Scanner</span>
             </a>
             <a
               href="https://github.com"

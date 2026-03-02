@@ -9,27 +9,19 @@
 
 - **Python 3.11+** — Backend runtime
 - **Node.js 18+** — Frontend runtime
-- **CodeQL CLI** — Static analysis engine
+- **Semgrep** — Static analysis engine (installed via pip)
 - **Git** — For cloning target repositories
 - **Anthropic API Key** (optional) — For AI-enhanced explanations
 
-## 1. Install CodeQL CLI
+## 1. Install Semgrep
 
-### macOS (Homebrew)
 ```bash
-brew install codeql
+pip install semgrep
 ```
 
-### Manual Installation
-1. Download the latest release from [github.com/github/codeql-cli-binaries/releases](https://github.com/github/codeql-cli-binaries/releases)
-2. Extract and add to your PATH:
+Verify installation:
 ```bash
-export CODEQL_PATH=/path/to/codeql
-```
-
-3. Verify installation:
-```bash
-codeql version
+semgrep --version
 ```
 
 ## 2. Backend Setup
@@ -41,7 +33,7 @@ cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install dependencies
+# Install dependencies (includes semgrep)
 pip install -r requirements.txt
 
 # Configure environment
@@ -91,8 +83,7 @@ The `vulnerable-demo-app/` directory contains intentionally vulnerable Python an
 3. Railway detects the Dockerfile automatically
 4. Add environment variables:
    - `ANTHROPIC_API_KEY` — Your Claude API key
-   - `CODEQL_PATH` — `/opt/codeql/codeql` (installed by Dockerfile)
-5. The Dockerfile installs git, CodeQL CLI, and Python dependencies
+5. The Dockerfile installs git, Semgrep (via pip), and Python dependencies
 
 ### Frontend (Vercel)
 
@@ -114,10 +105,9 @@ The `vulnerable-demo-app/` directory contains intentionally vulnerable Python an
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `ANTHROPIC_API_KEY` | No | — | Claude API key for AI enhancement |
-| `CODEQL_PATH` | No | `codeql` | Path to CodeQL CLI binary |
-| `TEMP_DIR` | No | `/tmp/codeql_scans` | Temp directory for cloned repos |
+| `TEMP_DIR` | No | `/tmp/security_scans` | Temp directory for cloned repos |
 | `MAX_REPO_SIZE_MB` | No | `500` | Max repo size limit |
-| `SCAN_TIMEOUT_SECONDS` | No | `600` | CodeQL timeout per step |
+| `SCAN_TIMEOUT_SECONDS` | No | `600` | Semgrep timeout |
 
 ### Frontend
 
@@ -127,12 +117,10 @@ The `vulnerable-demo-app/` directory contains intentionally vulnerable Python an
 
 ## Troubleshooting
 
-**CodeQL not found**: Ensure `codeql` is in your PATH or set `CODEQL_PATH` in `.env`. On Railway, set it to `/opt/codeql/codeql`.
+**Semgrep not found**: Ensure `semgrep` is in your PATH. It is installed via `pip install semgrep` or as part of `requirements.txt`.
 
 **CORS errors**: The backend allows all origins (`*`) by default for deployment flexibility.
 
 **AI enhancement skipped**: If no `ANTHROPIC_API_KEY` is set, the scanner still works but provides generic explanations instead of AI-generated ones.
 
 **Scan timeout**: Large repositories may exceed the default 600-second timeout. Increase `SCAN_TIMEOUT_SECONDS` in `.env`.
-
-**OOM on Railway**: CodeQL requires significant memory. Queries are run individually with `--ram=512` to fit within 1GB. If scans are killed, increase the Railway service memory or reduce the number of queries in `codeql_runner.py`.
