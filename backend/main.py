@@ -44,20 +44,24 @@ async def health_check() -> dict[str, object]:
 
     # Get semgrep version
     version = "unknown"
+    version_err = ""
     try:
         proc = await asyncio.create_subprocess_exec(
             "semgrep", "--version",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, _ = await proc.communicate()
-        version = stdout.decode().strip()
-    except Exception:
-        pass
+        stdout, stderr = await proc.communicate()
+        version = stdout.decode().strip() or stderr.decode().strip()
+        if proc.returncode != 0:
+            version_err = f"rc={proc.returncode}"
+    except Exception as e:
+        version_err = str(e)
 
     return {
         "status": "healthy",
         "semgrep_installed": semgrep_path is not None,
         "semgrep_path": semgrep_path or "not found",
         "semgrep_version": version,
+        "semgrep_version_error": version_err,
     }

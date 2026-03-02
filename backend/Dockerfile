@@ -10,6 +10,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Verify semgrep is installed and working
+RUN semgrep --version
+
 COPY . .
 
 ENV TEMP_DIR=/tmp/security_scans
