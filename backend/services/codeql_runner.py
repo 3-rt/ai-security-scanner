@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 from pathlib import Path
 
@@ -9,37 +8,25 @@ from utils.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Individual high-value security queries per language.
-# Format: "pack:path" where path is relative to the pack's ql/src directory.
-SECURITY_QUERIES: dict[str, list[str]] = {
-    "python": [
-        "codeql/python-queries:Security/CWE-089/SqlInjection.ql",
-        "codeql/python-queries:Security/CWE-078/CommandInjection.ql",
-        "codeql/python-queries:Security/CWE-079/ReflectedXss.ql",
-        "codeql/python-queries:Security/CWE-022/PathInjection.ql",
-        "codeql/python-queries:Security/CWE-502/UnsafeDeserialization.ql",
-    ],
-    "javascript": [
-        "codeql/javascript-queries:Security/CWE-089/SqlInjection.ql",
-        "codeql/javascript-queries:Security/CWE-078/CommandInjection.ql",
-        "codeql/javascript-queries:Security/CWE-079/ReflectedXss.ql",
-        "codeql/javascript-queries:Security/CWE-022/TaintedPath.ql",
-        "codeql/javascript-queries:Security/CWE-094/CodeInjection.ql",
-    ],
-    "java": [
-        "codeql/java-queries:Security/CWE-089/SqlTainted.ql",
-        "codeql/java-queries:Security/CWE-078/ExecTainted.ql",
-        "codeql/java-queries:Security/CWE-079/XSS.ql",
-        "codeql/java-queries:Security/CWE-022/TaintedPath.ql",
-        "codeql/java-queries:Security/CWE-502/UnsafeDeserialization.ql",
-    ],
+# CodeQL query suites for each language
+QUERY_SUITES: dict[str, str] = {
+    "python": "codeql/python-queries:codeql-suites/python-security-extended.qls",
+    "javascript": "codeql/javascript-queries:codeql-suites/javascript-security-extended.qls",
+    "java": "codeql/java-queries:codeql-suites/java-security-extended.qls",
+    "csharp": "codeql/csharp-queries:codeql-suites/csharp-security-extended.qls",
+    "go": "codeql/go-queries:codeql-suites/go-security-extended.qls",
+    "ruby": "codeql/ruby-queries:codeql-suites/ruby-security-extended.qls",
+    "cpp": "codeql/cpp-queries:codeql-suites/cpp-security-extended.qls",
 }
 
 
 async def create_database(
     repo_path: Path, language: str, scan_id: str
 ) -> Path:
-    """Create a CodeQL database from a repository."""
+    """Create a CodeQL database from a repository.
+
+    Returns the path to the created database.
+    """
     db_path = settings.TEMP_DIR / scan_id / "codeql-db"
     codeql = settings.CODEQL_PATH
 
@@ -52,7 +39,7 @@ async def create_database(
         f"--source-root={repo_path}",
         "--overwrite",
         "--threads=1",
-        "--ram=512",
+        "--ram=2048",
     ]
 
     logger.info("Creating CodeQL database: %s", " ".join(cmd))
@@ -78,123 +65,48 @@ async def create_database(
 async def run_analysis(
     db_path: Path, language: str, scan_id: str
 ) -> Path:
-    """Run CodeQL analysis one query at a time to stay within memory limits.
+    """Run CodeQL analysis on a database and output SARIF results.
 
-    Runs each query individually and merges SARIF results.
-    Returns the path to the merged SARIF output file.
+    Returns the path to the SARIF output file.
     """
-    merged_sarif_path = settings.TEMP_DIR / scan_id / "results.sarif"
+    sarif_path = settings.TEMP_DIR / scan_id / "results.sarif"
     codeql = settings.CODEQL_PATH
 
-    queries = SECURITY_QUERIES.get(language)
-    if not queries:
-        raise ValueError(f"No queries available for language: {language}")
+    suite = QUERY_SUITES.get(language)
+    if not suite:
+        raise ValueError(f"No query suite available for language: {language}")
 
-    all_results: list[dict] = []
-    all_rules: list[dict] = []
-    base_sarif: dict | None = None
-    succeeded = 0
-    failed = 0
+    cmd = [
+        codeql,
+        "database",
+        "analyze",
+        str(db_path),
+        suite,
+        "--format=sarifv2.1.0",
+        f"--output={sarif_path}",
+        "--threads=1",
+        "--ram=2048",
+        "--download",
+    ]
 
-    for i, query in enumerate(queries):
-        query_sarif = settings.TEMP_DIR / scan_id / f"result_{i}.sarif"
-        logger.info("Running query %d/%d: %s", i + 1, len(queries), query)
+    logger.info("Running CodeQL analysis: %s", " ".join(cmd))
 
-        cmd = [
-            codeql,
-            "database",
-            "analyze",
-            str(db_path),
-            query,
-            "--format=sarifv2.1.0",
-            f"--output={query_sarif}",
-            "--threads=1",
-            "--ram=512",
-            "--download",
-        ]
-
-        proc = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, stderr = await asyncio.wait_for(
-            proc.communicate(), timeout=settings.SCAN_TIMEOUT_SECONDS
-        )
-
-        stderr_text = stderr.decode().strip()
-
-        if proc.returncode != 0:
-            failed += 1
-            logger.warning("Query %s failed (rc=%d): %s", query, proc.returncode, stderr_text)
-            continue
-
-        if not query_sarif.exists():
-            failed += 1
-            logger.warning("Query %s produced no output file", query)
-            continue
-
-        try:
-            with open(query_sarif) as f:
-                sarif_data = json.load(f)
-        except json.JSONDecodeError:
-            failed += 1
-            logger.warning("Failed to parse SARIF for query %s", query)
-            continue
-
-        succeeded += 1
-
-        # Count results from this query
-        query_result_count = sum(
-            len(run.get("results", [])) for run in sarif_data.get("runs", [])
-        )
-        logger.info("Query %s: %d results found", query, query_result_count)
-
-        # Use first valid SARIF as the base structure
-        if base_sarif is None:
-            base_sarif = sarif_data
-
-        for run in sarif_data.get("runs", []):
-            all_results.extend(run.get("results", []))
-            driver = run.get("tool", {}).get("driver", {})
-            all_rules.extend(driver.get("rules", []))
-
-    logger.info(
-        "Query execution summary: %d succeeded, %d failed, %d total results",
-        succeeded, failed, len(all_results),
+    proc = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await asyncio.wait_for(
+        proc.communicate(), timeout=settings.SCAN_TIMEOUT_SECONDS
     )
 
-    # Merge all results into a single SARIF file
-    if base_sarif is None:
-        # No queries succeeded — create a minimal empty SARIF
-        logger.error("All %d queries failed! No results to return.", len(queries))
-        base_sarif = {
-            "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
-            "version": "2.1.0",
-            "runs": [{"tool": {"driver": {"name": "CodeQL", "rules": []}}, "results": []}],
-        }
+    if proc.returncode != 0:
+        error_msg = stderr.decode().strip()
+        logger.error("CodeQL analysis failed: %s", error_msg)
+        raise RuntimeError(f"CodeQL analysis failed: {error_msg}")
 
-    if base_sarif.get("runs"):
-        # Deduplicate rules by ID
-        seen_rules: set[str] = set()
-        unique_rules: list[dict] = []
-        for rule in all_rules:
-            rid = rule.get("id", "")
-            if rid not in seen_rules:
-                seen_rules.add(rid)
-                unique_rules.append(rule)
-
-        base_sarif["runs"][0]["results"] = all_results
-        base_sarif["runs"][0].setdefault("tool", {}).setdefault("driver", {})["rules"] = unique_rules
-
-    with open(merged_sarif_path, "w") as f:
-        json.dump(base_sarif, f, indent=2)
-
-    logger.info(
-        "CodeQL analysis complete. %d results from %d/%d queries. Output: %s",
-        len(all_results), succeeded, len(queries), merged_sarif_path,
-    )
-    return merged_sarif_path
+    logger.info("CodeQL analysis complete. Results at %s", sarif_path)
+    return sarif_path
 
 
 async def check_codeql_installed() -> bool:
