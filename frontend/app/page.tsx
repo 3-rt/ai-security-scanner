@@ -195,6 +195,9 @@ RepoManager -> SemgrepRunner -> SARIFParser -> AIEnhancer (parallel)`}
               <strong className="text-gray-900">Ruby:</strong> p/ruby, p/owasp-top-ten
             </p>
             <p>
+              <strong className="text-gray-900">PHP:</strong> p/php, p/owasp-top-ten
+            </p>
+            <p>
               <strong className="text-gray-900">Other:</strong> p/owasp-top-ten, p/security-audit
             </p>
           </div>

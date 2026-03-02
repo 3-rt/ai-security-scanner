@@ -24,6 +24,7 @@ EXTENSION_TO_LANGUAGE: dict[str, str] = {
     ".cs": "csharp",
     ".go": "go",
     ".rb": "ruby",
+    ".php": "php",
     ".cpp": "cpp",
     ".c": "cpp",
     ".h": "cpp",
@@ -31,7 +32,7 @@ EXTENSION_TO_LANGUAGE: dict[str, str] = {
 }
 
 # Languages supported for security analysis
-SUPPORTED_LANGUAGES = {"python", "javascript", "java", "csharp", "go", "ruby", "cpp"}
+SUPPORTED_LANGUAGES = {"python", "javascript", "java", "csharp", "go", "ruby", "cpp", "php"}
 
 # Allowed GitHub URL pattern
 GITHUB_URL_PATTERN = re.compile(

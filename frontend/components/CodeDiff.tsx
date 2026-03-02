@@ -21,6 +21,7 @@ export default function CodeDiff({ vulnerableCode, fixedCode, language = "python
     csharp: "csharp",
     go: "go",
     ruby: "ruby",
+    php: "php",
     cpp: "cpp",
   };
 

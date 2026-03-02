@@ -34,6 +34,10 @@ RULESETS: dict[str, list[str]] = {
         "p/ruby",
         "p/owasp-top-ten",
     ],
+    "php": [
+        "p/php",
+        "p/owasp-top-ten",
+    ],
 }
 
 # Default ruleset for any language
