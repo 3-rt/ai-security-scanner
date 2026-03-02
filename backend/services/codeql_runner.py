@@ -17,11 +17,6 @@ SECURITY_QUERIES: dict[str, list[str]] = {
         "codeql/python-queries:Security/CWE-079/ReflectedXss.ql",
         "codeql/python-queries:Security/CWE-022/PathInjection.ql",
         "codeql/python-queries:Security/CWE-502/UnsafeDeserialization.ql",
-        "codeql/python-queries:Security/CWE-094/CodeInjection.ql",
-        "codeql/python-queries:Security/CWE-798/HardcodedCredentials.ql",
-        "codeql/python-queries:Security/CWE-918/FullServerSideRequestForgery.ql",
-        "codeql/python-queries:Security/CWE-312/CleartextLogging.ql",
-        "codeql/python-queries:Security/CWE-611/Xxe.ql",
     ],
     "javascript": [
         "codeql/javascript-queries:Security/CWE-089/SqlInjection.ql",
@@ -29,11 +24,6 @@ SECURITY_QUERIES: dict[str, list[str]] = {
         "codeql/javascript-queries:Security/CWE-079/ReflectedXss.ql",
         "codeql/javascript-queries:Security/CWE-022/TaintedPath.ql",
         "codeql/javascript-queries:Security/CWE-094/CodeInjection.ql",
-        "codeql/javascript-queries:Security/CWE-798/HardcodedCredentials.ql",
-        "codeql/javascript-queries:Security/CWE-918/RequestForgery.ql",
-        "codeql/javascript-queries:Security/CWE-312/CleartextLogging.ql",
-        "codeql/javascript-queries:Security/CWE-327/BrokenCryptoAlgorithm.ql",
-        "codeql/javascript-queries:Security/CWE-116/IncompleteSanitization.ql",
     ],
     "java": [
         "codeql/java-queries:Security/CWE-089/SqlTainted.ql",

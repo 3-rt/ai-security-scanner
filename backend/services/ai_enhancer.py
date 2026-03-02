@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from typing import Any
@@ -54,17 +55,17 @@ async def enhance_vulnerabilities(
         return _apply_fallback_enhancements(vulnerabilities)
 
     client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
-    enhanced: list[Vulnerability] = []
 
-    for vuln in vulnerabilities:
+    async def _safe_enhance(vuln: Vulnerability) -> Vulnerability:
         try:
-            result = await _enhance_single(client, vuln)
-            enhanced.append(result)
+            return await _enhance_single(client, vuln)
         except Exception as e:
             logger.error("AI enhancement failed for %s: %s", vuln.id, e)
-            enhanced.append(_apply_single_fallback(vuln))
+            return _apply_single_fallback(vuln)
 
-    return enhanced
+    # Run all AI calls in parallel
+    enhanced = await asyncio.gather(*[_safe_enhance(v) for v in vulnerabilities])
+    return list(enhanced)
 
 
 async def _enhance_single(
